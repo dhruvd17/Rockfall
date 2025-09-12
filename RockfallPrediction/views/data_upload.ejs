@@ -1,0 +1,317 @@
+<%
+    const history = [
+        { fileName: 'dem_alps_01.tif', dataType: 'DEM', date: '2024-10-26', status: 'Completed' },
+        { fileName: 'drone_field_scan.jpg', dataType: 'Drone Imagery', date: '2024-10-25', status: 'Completed' },
+        { fileName: 'sensor_data_temp.csv', dataType: 'Sensor CSV', date: '2024-10-24', status: 'Failed' },
+        { fileName: 'archive_soil_data.zip', dataType: 'Sensor CSV', date: '2024-10-23', status: 'Processing' }
+    ];
+%>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Upload & Integration</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <!-- Application Structure Plan: The application uses a two-column, task-oriented layout. A fixed vertical navigation sidebar on the left allows users to switch between core tasks: 'Upload Data', 'Connect Source', and 'View History'. The main content panel on the right dynamically displays the relevant interface for the selected task. This structure was chosen to provide clear, persistent navigation and to logically separate different user workflows, preventing UI clutter and making the data ingestion process intuitive and efficient. -->
+    <!-- Visualization & Content Choices: Report Info -> Goal -> Viz/Presentation Method -> Interaction -> Justification -> Library/Method.
+        1. File Uploads (DEM, Drone, CSV) -> Goal: Allow users to submit files -> Method: Styled HTML file input forms -> Interaction: Click/drag-and-drop to select file, button click to submit -> Justification: Standard, universally understood method for file submission. Grouping by data type clarifies the workflow. -> Library/Method: HTML/CSS/JS.
+        2. API/Sensor Connection -> Goal: Allow users to connect external data feeds -> Method: HTML forms for API keys and informational cards for hardware guides -> Interaction: Text input for keys, button click to connect/view guides -> Justification: Provides a direct method for integration and offers supporting information without leaving the interface. -> Library/Method: HTML/CSS/JS.
+        3. Upload History -> Goal: Provide a log of past activities -> Method: A dynamic HTML table -> Interaction: The table would be populated via JS after uploads occur -> Justification: A table is the clearest way to present chronological, structured log data. -> Library/Method: HTML/CSS/JS.
+    -->
+    <style>
+        :root {
+            --bg-main: #F8F7F4;
+            --text-dark: #3D405B;
+            --primary: #81B29A;
+            --primary-hover: #6A9C80;
+            --secondary: #A2D2FF;
+            --accent: #E07A5F;
+            --border-color: #EAE8E1;
+        }
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-dark);
+            font-family: 'Inter', sans-serif;
+        }
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+            transition: background-color 0.3s;
+        }
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+        .nav-item {
+            transition: all 0.3s;
+            border-left: 4px solid transparent;
+        }
+        .nav-item.active {
+            background-color: var(--border-color);
+            color: var(--text-dark);
+            border-left-color: var(--primary);
+        }
+        .nav-item:hover {
+            background-color: var(--border-color);
+        }
+        .upload-box {
+            border: 2px dashed var(--border-color);
+            transition: all 0.3s;
+        }
+        .upload-box:hover {
+            border-color: var(--primary);
+            background-color: #FDFCFB;
+        }
+        .form-input {
+            background-color: #FFFFFF;
+            border: 1px solid var(--border-color);
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .form-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(129, 178, 154, 0.2);
+            outline: none;
+        }
+        .card {
+            background-color: #FFFFFF;
+            border: 1px solid var(--border-color);
+        }
+        .history-table th {
+            background-color: #FDFCFB;
+        }
+    </style>
+     <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="antialiased">
+
+    <div class="flex h-screen bg-white">
+        <aside class="w-64 flex-shrink-0 border-r border-gray-200" style="background-color: var(--bg-main); border-color: var(--border-color);">
+            <div class="p-6">
+                <h1 class="text-2xl font-bold flex items-center gap-2">
+                    <i class="ph-bold ph-squares-four text-3xl" style="color: var(--primary);"></i>
+                    DataHub
+                </h1>
+            </div>
+            <nav class="mt-8 px-4">
+                <a href="#upload" id="nav-upload" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-gray-600 active">
+                    <i class="ph ph-upload-simple text-xl"></i>
+                    Upload Data
+                </a>
+                <a href="#connect" id="nav-connect" class="nav-item flex items-center gap-3 px-4 py-3 mt-2 rounded-lg font-medium text-gray-600">
+                    <i class="ph ph-plugs-connected text-xl"></i>
+                    Connect Source
+                </a>
+                <a href="#history" id="nav-history" class="nav-item flex items-center gap-3 px-4 py-3 mt-2 rounded-lg font-medium text-gray-600">
+                    <i class="ph ph-clock-counter-clockwise text-xl"></i>
+                    Upload History
+                </a>
+            </nav>
+        </aside>
+        
+        <main class="flex-1 p-8 md:p-12 overflow-y-auto">
+            <div id="panel-upload" class="panel">
+                <header class="mb-8">
+                    <h2 class="text-3xl font-bold text-gray-800" style="color: var(--text-dark);">Data Upload</h2>
+                    <p class="text-gray-500 mt-1">Select a data type and upload your file.</p>
+                </header>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div class="card p-6 rounded-xl shadow-sm">
+                        <div class="flex items-center gap-3 mb-4">
+                            <i class="ph ph-mountains text-2xl" style="color: var(--accent);"></i>
+                            <h3 class="text-lg font-semibold">DEM Files</h3>
+                        </div>
+                        <p class="text-sm text-gray-500 mb-4">Upload Digital Elevation Model files.</p>
+                        <div class="upload-box p-6 text-center rounded-lg cursor-pointer">
+                            <i class="ph ph-file-arrow-up text-4xl text-gray-400"></i>
+                            <p class="text-sm text-gray-500 mt-2">Click to browse or drag & drop</p>
+                            <input type="file" class="hidden">
+                        </div>
+                    </div>
+                    
+                    <div class="card p-6 rounded-xl shadow-sm">
+                        <div class="flex items-center gap-3 mb-4">
+                            <i class="ph ph-camera text-2xl" style="color: var(--accent);"></i>
+                            <h3 class="text-lg font-semibold">Drone Imagery</h3>
+                        </div>
+                        <p class="text-sm text-gray-500 mb-4">JPEG, TIFF, and other image formats.</p>
+                        <div class="upload-box p-6 text-center rounded-lg cursor-pointer">
+                            <i class="ph ph-file-image text-4xl text-gray-400"></i>
+                             <p class="text-sm text-gray-500 mt-2">Click to browse or drag & drop</p>
+                            <input type="file" class="hidden" multiple>
+                        </div>
+                    </div>
+
+                    <div class="card p-6 rounded-xl shadow-sm">
+                        <div class="flex items-center gap-3 mb-4">
+                           <i class="ph ph-file-csv text-2xl" style="color: var(--accent);"></i>
+                            <h3 class="text-lg font-semibold">Sensor CSV Data</h3>
+                        </div>
+                        <p class="text-sm text-gray-500 mb-4">Upload formatted sensor data files.</p>
+                        <div class="upload-box p-6 text-center rounded-lg cursor-pointer">
+                            <i class="ph ph-file-text text-4xl text-gray-400"></i>
+                             <p class="text-sm text-gray-500 mt-2">Click to browse or drag & drop</p>
+                            <input type="file" class="hidden" accept=".csv">
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-8">
+                    <button class="btn-primary font-semibold py-3 px-6 rounded-lg flex items-center gap-2">
+                        <i class="ph ph-upload-simple"></i>
+                        Upload File
+                    </button>
+                </div>
+            </div>
+
+            <div id="panel-connect" class="panel hidden">
+                 <header class="mb-8">
+                    <h2 class="text-3xl font-bold text-gray-800" style="color: var(--text-dark);">Connect Data Source</h2>
+                    <p class="text-gray-500 mt-1">Integrate with sensor networks or connect hardware.</p>
+                </header>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="card p-6 rounded-xl shadow-sm">
+                        <h3 class="text-lg font-semibold mb-2">Connect to Sensor Networks</h3>
+                        <p class="text-sm text-gray-500 mb-4">Enter your API key to sync data from a supported network.</p>
+                        <div class="space-y-4">
+                            <div>
+                                <label for="api-key" class="block text-sm font-medium text-gray-700">API Key</label>
+                                <input type="text" id="api-key" class="form-input mt-1 block w-full rounded-md shadow-sm py-2 px-3" placeholder="Enter your API key">
+                            </div>
+                             <button class="btn-primary font-semibold py-2 px-4 rounded-lg flex items-center gap-2 w-full sm:w-auto">
+                                <i class="ph ph-plugs-connected"></i>
+                                Connect Sensor
+                            </button>
+                        </div>
+                    </div>
+                     <div class="card p-6 rounded-xl shadow-sm">
+                        <h3 class="text-lg font-semibold mb-2">Low-Cost Hardware Setup</h3>
+                        <p class="text-sm text-gray-500 mb-4">Follow our guides to set up your own data collection hardware and start syncing data.</p>
+                        <button class="font-semibold py-2 px-4 rounded-lg flex items-center gap-2 w-full sm:w-auto text-white" style="background-color: var(--accent);">
+                           <i class="ph ph-book-open"></i>
+                            View Setup Guides
+                        </button>
+                    </div>
+                </div>
+                <div class="mt-8 flex gap-4">
+                     <button class="btn-primary font-semibold py-3 px-6 rounded-lg flex items-center gap-2">
+                        <i class="ph ph-arrows-clockwise"></i>
+                        Start Data Sync
+                    </button>
+                </div>
+            </div>
+
+            <div id="panel-history" class="panel hidden">
+                <header class="mb-8">
+                    <h2 class="text-3xl font-bold text-gray-800" style="color: var(--text-dark);">Upload History</h2>
+                    <p class="text-gray-500 mt-1">A log of your recent data uploads.</p>
+                </header>
+                <div class="card rounded-xl shadow-sm overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left text-gray-500 history-table">
+                            <thead class="text-xs text-gray-700 uppercase">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3">File Name</th>
+                                    <th scope="col" class="px-6 py-3">Data Type</th>
+                                    <th scope="col" class="px-6 py-3">Date</th>
+                                    <th scope="col" class="px-6 py-3">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="history-table-body">
+                                <% history.forEach(record => { %>
+                                <tr class="bg-white border-b" style="border-color: var(--border-color);">
+                                    <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap"><%= record.fileName %></td>
+                                    <td class="px-6 py-4"><%= record.dataType %></td>
+                                    <td class="px-6 py-4"><%= record.date %></td>
+                                    <td class="px-6 py-4">
+                                        <% let statusColor = "bg-green-100 text-green-800"; %>
+                                        <% if (record.status === "Failed") { %>
+                                            <% statusColor = "bg-red-100 text-red-800"; %>
+                                        <% } else if (record.status === "Processing") { %>
+                                            <% statusColor = "bg-yellow-100 text-yellow-800"; %>
+                                        <% } %>
+                                        <span class="<%= statusColor %> text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full"><%= record.status %></span>
+                                    </td>
+                                </tr>
+                                <% }); %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                 <div class="mt-8">
+                     <button class="font-semibold py-2 px-4 rounded-lg flex items-center gap-2 border" style="background-color: white; border-color: var(--border-color);">
+                        <i class="ph ph-clock-counter-clockwise"></i>
+                        View Full History
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const navLinks = document.querySelectorAll('aside nav a');
+        const panels = document.querySelectorAll('main .panel');
+
+        function switchPanel(hash) {
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === hash) {
+                    link.classList.add('active');
+                }
+            });
+
+            panels.forEach(panel => {
+                if (`#${panel.id.split('-')[1]}` === hash) {
+                    panel.classList.remove('hidden');
+                } else {
+                    panel.classList.add('hidden');
+                }
+            });
+        }
+        
+        navLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetHash = this.getAttribute('href');
+                window.location.hash = targetHash;
+            });
+        });
+
+        window.addEventListener('hashchange', () => {
+             const hash = window.location.hash || '#upload';
+             switchPanel(hash);
+        });
+
+        const initialHash = window.location.hash || '#upload';
+        switchPanel(initialHash);
+        
+        document.querySelectorAll('.upload-box').forEach(box => {
+            const input = box.querySelector('input[type="file"]');
+            box.addEventListener('click', () => input.click());
+            
+            box.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                box.style.borderColor = 'var(--primary)';
+            });
+            box.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                box.style.borderColor = 'var(--border-color)';
+            });
+            box.addEventListener('drop', (e) => {
+                e.preventDefault();
+                box.style.borderColor = 'var(--border-color)';
+                if (e.dataTransfer.files.length > 0) {
+                    input.files = e.dataTransfer.files;
+                    console.log('Files dropped:', input.files);
+                }
+            });
+        });
+
+    });
+</script>
+</body>
+</html>
