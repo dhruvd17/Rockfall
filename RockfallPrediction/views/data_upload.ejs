@@ -1,38 +1,286 @@
-<%
-    const history = [
-        { fileName: 'dem_alps_01.tif', dataType: 'DEM', date: '2024-10-26', status: 'Completed' },
-        { fileName: 'drone_field_scan.jpg', dataType: 'Drone Imagery', date: '2024-10-25', status: 'Completed' },
-        { fileName: 'sensor_data_temp.csv', dataType: 'Sensor CSV', date: '2024-10-24', status: 'Failed' },
-        { fileName: 'archive_soil_data.zip', dataType: 'Sensor CSV', date: '2024-10-23', status: 'Processing' }
-    ];
-%>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Data Upload & Integration</title>
+    <title>Rockfall: PitMine - <%= appTitle %></title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <!-- Application Structure Plan: The application uses a two-column, task-oriented layout. A fixed vertical navigation sidebar on the left allows users to switch between core tasks: 'Upload Data', 'Connect Source', and 'View History'. The main content panel on the right dynamically displays the relevant interface for the selected task. This structure was chosen to provide clear, persistent navigation and to logically separate different user workflows, preventing UI clutter and making the data ingestion process intuitive and efficient. -->
-    <!-- Visualization & Content Choices: Report Info -> Goal -> Viz/Presentation Method -> Interaction -> Justification -> Library/Method.
-        1. File Uploads (DEM, Drone, CSV) -> Goal: Allow users to submit files -> Method: Styled HTML file input forms -> Interaction: Click/drag-and-drop to select file, button click to submit -> Justification: Standard, universally understood method for file submission. Grouping by data type clarifies the workflow. -> Library/Method: HTML/CSS/JS.
-        2. API/Sensor Connection -> Goal: Allow users to connect external data feeds -> Method: HTML forms for API keys and informational cards for hardware guides -> Interaction: Text input for keys, button click to connect/view guides -> Justification: Provides a direct method for integration and offers supporting information without leaving the interface. -> Library/Method: HTML/CSS/JS.
-        3. Upload History -> Goal: Provide a log of past activities -> Method: A dynamic HTML table -> Interaction: The table would be populated via JS after uploads occur -> Justification: A table is the clearest way to present chronological, structured log data. -> Library/Method: HTML/CSS/JS.
-    -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, orderBy, query, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global variables provided by the Canvas environment
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        let app, db, auth;
+        let unsubscribeHistory = null;
+        let isAuthReady = false;
+        let userId = 'loading...';
+        
+        // This function displays a temporary message to the user.
+        function showMessage(message, type = 'success') {
+            const messageBox = document.getElementById('message-box');
+            messageBox.textContent = message;
+            messageBox.style.backgroundColor = type === 'success' ? '#22c55e' : '#ef4444';
+            messageBox.style.opacity = '1';
+            messageBox.style.visibility = 'visible';
+            setTimeout(() => {
+                messageBox.style.opacity = '0';
+                messageBox.style.visibility = 'hidden';
+            }, 3000);
+        }
+
+        // Initialize Firebase and Authentication
+        async function initializeFirebase() {
+            try {
+                if (!app) {
+                    app = initializeApp(firebaseConfig);
+                    db = getFirestore(app);
+                    auth = getAuth(app);
+                    
+                    onAuthStateChanged(auth, async (user) => {
+                        if (user) {
+                            userId = user.uid;
+                            document.getElementById('user-id').textContent = `User ID: ${userId.substring(0, 8)}...`;
+                        } else {
+                            userId = crypto.randomUUID();
+                            document.getElementById('user-id').textContent = 'User ID: Anonymous';
+                        }
+                        isAuthReady = true;
+                        // Initial panel switch after auth is ready
+                        const initialHash = window.location.hash || '#upload';
+                        switchPanel(initialHash);
+                    });
+
+                    if (initialAuthToken) {
+                        await signInWithCustomToken(auth, initialAuthToken);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                }
+            } catch (error) {
+                console.error("Firebase initialization failed:", error);
+                showMessage("Firebase connection failed. Check your configuration.", 'error');
+            }
+        }
+        
+        // Function to render the history table from Firestore data
+        function renderHistoryTable(historyData) {
+            const historyTableBody = document.getElementById('history-table-body');
+            if (!historyTableBody) return;
+            
+            historyTableBody.innerHTML = '';
+            historyData.forEach(record => {
+                const row = document.createElement('tr');
+                row.classList.add('bg-white', 'border-b');
+                row.style.borderColor = 'var(--border-color)';
+                let statusColor = 'bg-green-600';
+                if (record.status === 'Failed') {
+                    statusColor = 'bg-red-600';
+                } else if (record.status === 'Processing') {
+                    statusColor = 'bg-yellow-500';
+                }
+                const statusTextColor = record.status === 'Processing' ? 'text-black' : 'text-white';
+
+                row.innerHTML = `
+                    <td class="px-6 py-4 font-medium text-gray-200 whitespace-nowrap">${record.fileName}</td>
+                    <td class="px-6 py-4">${record.dataType}</td>
+                    <td class="px-6 py-4">${record.date ? new Date(record.date.seconds * 1000).toLocaleDateString() : 'N/A'}</td>
+                    <td class="px-6 py-4">
+                        <span class="${statusColor} ${statusTextColor} text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full">${record.status}</span>
+                    </td>
+                `;
+                historyTableBody.appendChild(row);
+            });
+        }
+        
+        // Main logic to switch between panels
+        function switchPanel(hash) {
+            const navLinks = document.querySelectorAll('aside nav a');
+            const panels = document.querySelectorAll('main .panel');
+            
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === hash) {
+                    link.classList.add('active');
+                }
+            });
+
+            panels.forEach(panel => {
+                const panelIdHash = `#${panel.id.split('-')[1]}`;
+                if (panelIdHash === hash) {
+                    panel.classList.remove('hidden');
+                } else {
+                    panel.classList.add('hidden');
+                }
+            });
+
+            // Start or stop the Firestore listener based on the active panel
+            if (unsubscribeHistory) {
+                unsubscribeHistory(); // Detach old listener
+                unsubscribeHistory = null;
+            }
+            if (hash === '#history' && isAuthReady) {
+                const historyCollectionRef = collection(db, `/artifacts/${appId}/public/data/history`);
+                const q = query(historyCollectionRef, orderBy('timestamp', 'desc'));
+                unsubscribeHistory = onSnapshot(q, (snapshot) => {
+                    const historyData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    renderHistoryTable(historyData);
+                });
+            }
+        }
+        
+        // Function to handle file uploads
+        async function handleUpload(fileInput, dataType) {
+            if (!fileInput.files.length) {
+                showMessage("Please select a file to upload.", 'error');
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            const fileName = file.name;
+
+            const uploadStatus = {
+                fileName,
+                dataType,
+                date: new Date().toISOString(),
+                status: 'Processing',
+                timestamp: serverTimestamp(),
+                userId: userId
+            };
+            
+            try {
+                const docRef = await addDoc(collection(db, `/artifacts/${appId}/public/data/history`), uploadStatus);
+                showMessage(`Uploading "${fileName}"...`);
+                // Simulate a successful upload after a short delay
+                setTimeout(async () => {
+                    await setDoc(doc(db, `/artifacts/${appId}/public/data/history`, docRef.id), { status: 'Completed' }, { merge: true });
+                    showMessage(`"${fileName}" upload completed successfully!`);
+                    fileInput.value = ''; // Clear the input field
+                }, 1500);
+            } catch (e) {
+                console.error("Error adding document: ", e);
+                showMessage("Upload failed. Please try again.", 'error');
+            }
+        }
+
+        // Function to handle sensor connection
+        async function handleConnectSensor() {
+            const apiKey = document.getElementById('api-key').value;
+            if (!apiKey) {
+                showMessage("Please enter an API key.", 'error');
+                return;
+            }
+
+            const connectionStatus = {
+                type: 'Sensor Connection',
+                apiKey: apiKey,
+                date: new Date().toISOString(),
+                status: 'Connecting',
+                timestamp: serverTimestamp(),
+                userId: userId
+            };
+            
+            try {
+                const docRef = await addDoc(collection(db, `/artifacts/${appId}/public/data/history`), connectionStatus);
+                showMessage("Connecting to sensor network...", 'success');
+                // Simulate a successful connection after a short delay
+                setTimeout(async () => {
+                    await setDoc(doc(db, `/artifacts/${appId}/public/data/history`, docRef.id), { status: 'Completed' }, { merge: true });
+                    showMessage("Sensor connection successful!", 'success');
+                }, 1500);
+            } catch (e) {
+                console.error("Error adding document: ", e);
+                showMessage("Connection failed. Please try again.", 'error');
+            }
+        }
+
+        // Add event listeners after DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeFirebase();
+
+            const navLinks = document.querySelectorAll('aside nav a');
+            const uploadButtons = document.querySelectorAll('main button.btn-primary');
+            const connectButton = document.querySelector('#panel-connect .btn-primary');
+            
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetHash = this.getAttribute('href');
+                    window.location.hash = targetHash;
+                });
+            });
+
+            window.addEventListener('hashchange', () => {
+                const hash = window.location.hash || '#upload';
+                switchPanel(hash);
+            });
+            
+            // File upload buttons
+            document.querySelector('#panel-upload button.btn-primary').addEventListener('click', () => {
+                const fileInputs = document.querySelectorAll('.upload-box input[type="file"]');
+                let foundFile = false;
+                fileInputs.forEach(input => {
+                    if (input.files.length > 0) {
+                        const dataType = input.closest('.card').querySelector('h3').textContent.replace(' Files', '').replace(' Data', '');
+                        handleUpload(input, dataType);
+                        foundFile = true;
+                    }
+                });
+                if (!foundFile) {
+                    showMessage("Please select a file to upload.", 'error');
+                }
+            });
+
+            // Connect button
+            document.querySelector('#panel-connect .btn-primary').addEventListener('click', handleConnectSensor);
+
+            // Drag-and-drop functionality
+            document.querySelectorAll('.upload-box').forEach(box => {
+                const input = box.querySelector('input[type="file"]');
+                box.addEventListener('click', () => input.click());
+                
+                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                    box.addEventListener(eventName, (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }, false);
+                });
+
+                ['dragenter', 'dragover'].forEach(eventName => {
+                    box.addEventListener(eventName, () => box.style.borderColor = 'var(--primary)', false);
+                });
+
+                ['dragleave', 'drop'].forEach(eventName => {
+                    box.addEventListener(eventName, () => box.style.borderColor = 'var(--border-color)', false);
+                });
+
+                box.addEventListener('drop', (e) => {
+                    const files = e.dataTransfer.files;
+                    if (files.length > 0) {
+                        input.files = files;
+                        console.log('Files dropped:', input.files);
+                    }
+                }, false);
+            });
+        });
+    </script>
     <style>
         :root {
-            --bg-main: #F8F7F4;
-            --text-dark: #3D405B;
-            --primary: #81B29A;
-            --primary-hover: #6A9C80;
-            --secondary: #A2D2FF;
-            --accent: #E07A5F;
-            --border-color: #EAE8E1;
+            --bg-main: #1C2534;
+            --bg-card: #2C3E50;
+            --text-light: #EAEFF6;
+            --primary: #F27A59;
+            --primary-hover: #D66244;
+            --border-color: #3D4C5E;
         }
         body {
             background-color: var(--bg-main);
-            color: var(--text-dark);
+            color: var(--text-light);
             font-family: 'Inter', sans-serif;
         }
         .btn-primary {
@@ -43,17 +291,26 @@
         .btn-primary:hover {
             background-color: var(--primary-hover);
         }
+        .btn-secondary {
+            background-color: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-light);
+            transition: background-color 0.3s;
+        }
+        .btn-secondary:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
         .nav-item {
             transition: all 0.3s;
             border-left: 4px solid transparent;
         }
         .nav-item.active {
-            background-color: var(--border-color);
-            color: var(--text-dark);
+            background-color: var(--bg-card);
+            color: white;
             border-left-color: var(--primary);
         }
         .nav-item:hover {
-            background-color: var(--border-color);
+            background-color: var(--bg-card);
         }
         .upload-box {
             border: 2px dashed var(--border-color);
@@ -61,50 +318,60 @@
         }
         .upload-box:hover {
             border-color: var(--primary);
-            background-color: #FDFCFB;
+            background-color: rgba(255, 255, 255, 0.05);
         }
         .form-input {
-            background-color: #FFFFFF;
+            background-color: var(--bg-card);
             border: 1px solid var(--border-color);
+            color: var(--text-light);
             transition: border-color 0.3s, box-shadow 0.3s;
         }
         .form-input:focus {
             border-color: var(--primary);
-            box-shadow: 0 0 0 2px rgba(129, 178, 154, 0.2);
+            box-shadow: 0 0 0 2px rgba(242, 122, 89, 0.2);
             outline: none;
         }
         .card {
-            background-color: #FFFFFF;
+            background-color: var(--bg-card);
             border: 1px solid var(--border-color);
         }
         .history-table th {
-            background-color: #FDFCFB;
+            background-color: var(--bg-card);
+        }
+        .history-table tbody tr {
+            background-color: var(--bg-card);
+            border-color: var(--border-color);
         }
     </style>
-     <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body class="antialiased">
 
-    <div class="flex h-screen bg-white">
-        <aside class="w-64 flex-shrink-0 border-r border-gray-200" style="background-color: var(--bg-main); border-color: var(--border-color);">
+    <div class="flex h-screen">
+        <aside class="w-64 flex-shrink-0 border-r" style="background-color: var(--bg-main); border-color: var(--border-color);">
             <div class="p-6">
-                <h1 class="text-2xl font-bold flex items-center gap-2">
-                    <i class="ph-bold ph-squares-four text-3xl" style="color: var(--primary);"></i>
-                    DataHub
-                </h1>
+                <div class="flex flex-col items-center justify-center text-center">
+                    <!-- This is the updated image logo -->
+                    <img src="Rockfall_logo.png" alt="Rockfall PitMine Logo" style="width: 76px; height: 63px;">
+                    <h1 class="text-2xl font-bold mt-2" style="color: var(--text-light);">Rockfall: PitMine</h1>
+                    <p class="text-sm font-medium mt-1" style="color: var(--text-light);">Slope Stability Monitor</p>
+                </div>
+                <div class="mt-4 text-xs font-mono text-center text-gray-400 p-2 rounded" style="background-color: var(--bg-card);">
+                    <p id="user-id">Loading User...</p>
+                </div>
             </div>
             <nav class="mt-8 px-4">
-                <a href="#upload" id="nav-upload" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-gray-600 active">
+                <a href="#upload" id="nav-upload" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-gray-400 active">
                     <i class="ph ph-upload-simple text-xl"></i>
                     Upload Data
                 </a>
-                <a href="#connect" id="nav-connect" class="nav-item flex items-center gap-3 px-4 py-3 mt-2 rounded-lg font-medium text-gray-600">
+                <a href="#connect" id="nav-connect" class="nav-item flex items-center gap-3 px-4 py-3 mt-2 rounded-lg font-medium text-gray-400">
                     <i class="ph ph-plugs-connected text-xl"></i>
                     Connect Source
                 </a>
-                <a href="#history" id="nav-history" class="nav-item flex items-center gap-3 px-4 py-3 mt-2 rounded-lg font-medium text-gray-600">
+                <a href="#history" id="nav-history" class="nav-item flex items-center gap-3 px-4 py-3 mt-2 rounded-lg font-medium text-gray-400">
                     <i class="ph ph-clock-counter-clockwise text-xl"></i>
                     Upload History
                 </a>
@@ -114,46 +381,46 @@
         <main class="flex-1 p-8 md:p-12 overflow-y-auto">
             <div id="panel-upload" class="panel">
                 <header class="mb-8">
-                    <h2 class="text-3xl font-bold text-gray-800" style="color: var(--text-dark);">Data Upload</h2>
-                    <p class="text-gray-500 mt-1">Select a data type and upload your file.</p>
+                    <h2 class="text-3xl font-bold" style="color: var(--text-light);">Data Upload</h2>
+                    <p class="text-gray-400 mt-1">Select a data type and upload your file.</p>
                 </header>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     <div class="card p-6 rounded-xl shadow-sm">
                         <div class="flex items-center gap-3 mb-4">
-                            <i class="ph ph-mountains text-2xl" style="color: var(--accent);"></i>
+                            <i class="ph ph-mountains text-2xl" style="color: var(--primary);"></i>
                             <h3 class="text-lg font-semibold">DEM Files</h3>
                         </div>
-                        <p class="text-sm text-gray-500 mb-4">Upload Digital Elevation Model files.</p>
+                        <p class="text-sm text-gray-400 mb-4">Upload Digital Elevation Model files.</p>
                         <div class="upload-box p-6 text-center rounded-lg cursor-pointer">
-                            <i class="ph ph-file-arrow-up text-4xl text-gray-400"></i>
-                            <p class="text-sm text-gray-500 mt-2">Click to browse or drag & drop</p>
+                            <i class="ph ph-file-arrow-up text-4xl text-gray-500"></i>
+                            <p class="text-sm text-gray-400 mt-2">Click to browse or drag & drop</p>
                             <input type="file" class="hidden">
                         </div>
                     </div>
                     
                     <div class="card p-6 rounded-xl shadow-sm">
                         <div class="flex items-center gap-3 mb-4">
-                            <i class="ph ph-camera text-2xl" style="color: var(--accent);"></i>
+                            <i class="ph ph-camera text-2xl" style="color: var(--primary);"></i>
                             <h3 class="text-lg font-semibold">Drone Imagery</h3>
                         </div>
-                        <p class="text-sm text-gray-500 mb-4">JPEG, TIFF, and other image formats.</p>
+                        <p class="text-sm text-gray-400 mb-4">JPEG, TIFF, and other image formats.</p>
                         <div class="upload-box p-6 text-center rounded-lg cursor-pointer">
-                            <i class="ph ph-file-image text-4xl text-gray-400"></i>
-                             <p class="text-sm text-gray-500 mt-2">Click to browse or drag & drop</p>
+                            <i class="ph ph-file-image text-4xl text-gray-500"></i>
+                             <p class="text-sm text-gray-400 mt-2">Click to browse or drag & drop</p>
                             <input type="file" class="hidden" multiple>
                         </div>
                     </div>
 
                     <div class="card p-6 rounded-xl shadow-sm">
                         <div class="flex items-center gap-3 mb-4">
-                           <i class="ph ph-file-csv text-2xl" style="color: var(--accent);"></i>
+                           <i class="ph ph-file-csv text-2xl" style="color: var(--primary);"></i>
                             <h3 class="text-lg font-semibold">Sensor CSV Data</h3>
                         </div>
-                        <p class="text-sm text-gray-500 mb-4">Upload formatted sensor data files.</p>
+                        <p class="text-sm text-gray-400 mb-4">Upload formatted sensor data files.</p>
                         <div class="upload-box p-6 text-center rounded-lg cursor-pointer">
-                            <i class="ph ph-file-text text-4xl text-gray-400"></i>
-                             <p class="text-sm text-gray-500 mt-2">Click to browse or drag & drop</p>
+                            <i class="ph ph-file-text text-4xl text-gray-500"></i>
+                             <p class="text-sm text-gray-400 mt-2">Click to browse or drag & drop</p>
                             <input type="file" class="hidden" accept=".csv">
                         </div>
                     </div>
@@ -168,20 +435,20 @@
 
             <div id="panel-connect" class="panel hidden">
                  <header class="mb-8">
-                    <h2 class="text-3xl font-bold text-gray-800" style="color: var(--text-dark);">Connect Data Source</h2>
-                    <p class="text-gray-500 mt-1">Integrate with sensor networks or connect hardware.</p>
+                    <h2 class="text-3xl font-bold" style="color: var(--text-light);">Connect Data Source</h2>
+                    <p class="text-gray-400 mt-1">Integrate with sensor networks or connect hardware.</p>
                 </header>
 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <div class="card p-6 rounded-xl shadow-sm">
                         <h3 class="text-lg font-semibold mb-2">Connect to Sensor Networks</h3>
-                        <p class="text-sm text-gray-500 mb-4">Enter your API key to sync data from a supported network.</p>
+                        <p class="text-sm text-gray-400 mb-4">Enter your API key to sync data from a supported network.</p>
                         <div class="space-y-4">
                             <div>
-                                <label for="api-key" class="block text-sm font-medium text-gray-700">API Key</label>
+                                <label for="api-key" class="block text-sm font-medium text-gray-400">API Key</label>
                                 <input type="text" id="api-key" class="form-input mt-1 block w-full rounded-md shadow-sm py-2 px-3" placeholder="Enter your API key">
                             </div>
-                             <button class="btn-primary font-semibold py-2 px-4 rounded-lg flex items-center gap-2 w-full sm:w-auto">
+                            <button class="btn-primary font-semibold py-2 px-4 rounded-lg flex items-center gap-2 w-full sm:w-auto">
                                 <i class="ph ph-plugs-connected"></i>
                                 Connect Sensor
                             </button>
@@ -189,9 +456,9 @@
                     </div>
                      <div class="card p-6 rounded-xl shadow-sm">
                         <h3 class="text-lg font-semibold mb-2">Low-Cost Hardware Setup</h3>
-                        <p class="text-sm text-gray-500 mb-4">Follow our guides to set up your own data collection hardware and start syncing data.</p>
-                        <button class="font-semibold py-2 px-4 rounded-lg flex items-center gap-2 w-full sm:w-auto text-white" style="background-color: var(--accent);">
-                           <i class="ph ph-book-open"></i>
+                        <p class="text-sm text-gray-400 mb-4">Follow our guides to set up your own data collection hardware and start syncing data.</p>
+                        <button class="btn-primary font-semibold py-2 px-4 rounded-lg flex items-center gap-2 w-full sm:w-auto">
+                            <i class="ph ph-book-open"></i>
                             View Setup Guides
                         </button>
                     </div>
@@ -206,13 +473,13 @@
 
             <div id="panel-history" class="panel hidden">
                 <header class="mb-8">
-                    <h2 class="text-3xl font-bold text-gray-800" style="color: var(--text-dark);">Upload History</h2>
-                    <p class="text-gray-500 mt-1">A log of your recent data uploads.</p>
+                    <h2 class="text-3xl font-bold" style="color: var(--text-light);">Upload History</h2>
+                    <p class="text-gray-400 mt-1">A log of your recent data uploads.</p>
                 </header>
                 <div class="card rounded-xl shadow-sm overflow-hidden">
                     <div class="overflow-x-auto">
-                        <table class="w-full text-sm text-left text-gray-500 history-table">
-                            <thead class="text-xs text-gray-700 uppercase">
+                        <table class="w-full text-sm text-left text-gray-400 history-table">
+                            <thead class="text-xs text-gray-300 uppercase">
                                 <tr>
                                     <th scope="col" class="px-6 py-3">File Name</th>
                                     <th scope="col" class="px-6 py-3">Data Type</th>
@@ -221,28 +488,13 @@
                                 </tr>
                             </thead>
                             <tbody id="history-table-body">
-                                <% history.forEach(record => { %>
-                                <tr class="bg-white border-b" style="border-color: var(--border-color);">
-                                    <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap"><%= record.fileName %></td>
-                                    <td class="px-6 py-4"><%= record.dataType %></td>
-                                    <td class="px-6 py-4"><%= record.date %></td>
-                                    <td class="px-6 py-4">
-                                        <% let statusColor = "bg-green-100 text-green-800"; %>
-                                        <% if (record.status === "Failed") { %>
-                                            <% statusColor = "bg-red-100 text-red-800"; %>
-                                        <% } else if (record.status === "Processing") { %>
-                                            <% statusColor = "bg-yellow-100 text-yellow-800"; %>
-                                        <% } %>
-                                        <span class="<%= statusColor %> text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full"><%= record.status %></span>
-                                    </td>
-                                </tr>
-                                <% }); %>
+                                <!-- Table rows will be inserted here by JavaScript -->
                             </tbody>
                         </table>
                     </div>
                 </div>
                  <div class="mt-8">
-                     <button class="font-semibold py-2 px-4 rounded-lg flex items-center gap-2 border" style="background-color: white; border-color: var(--border-color);">
+                     <button class="btn-secondary font-semibold py-2 px-4 rounded-lg flex items-center gap-2">
                         <i class="ph ph-clock-counter-clockwise"></i>
                         View Full History
                     </button>
@@ -250,68 +502,9 @@
             </div>
         </main>
     </div>
+    <div id="message-box" class="fixed bottom-4 right-4 bg-green-500 text-white py-3 px-6 rounded-lg shadow-lg opacity-0 transition-opacity duration-300 ease-in-out invisible z-50">
+        Message
+    </div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const navLinks = document.querySelectorAll('aside nav a');
-        const panels = document.querySelectorAll('main .panel');
-
-        function switchPanel(hash) {
-            navLinks.forEach(link => {
-                link.classList.remove('active');
-                if (link.getAttribute('href') === hash) {
-                    link.classList.add('active');
-                }
-            });
-
-            panels.forEach(panel => {
-                if (`#${panel.id.split('-')[1]}` === hash) {
-                    panel.classList.remove('hidden');
-                } else {
-                    panel.classList.add('hidden');
-                }
-            });
-        }
-        
-        navLinks.forEach(link => {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                const targetHash = this.getAttribute('href');
-                window.location.hash = targetHash;
-            });
-        });
-
-        window.addEventListener('hashchange', () => {
-             const hash = window.location.hash || '#upload';
-             switchPanel(hash);
-        });
-
-        const initialHash = window.location.hash || '#upload';
-        switchPanel(initialHash);
-        
-        document.querySelectorAll('.upload-box').forEach(box => {
-            const input = box.querySelector('input[type="file"]');
-            box.addEventListener('click', () => input.click());
-            
-            box.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                box.style.borderColor = 'var(--primary)';
-            });
-            box.addEventListener('dragleave', (e) => {
-                e.preventDefault();
-                box.style.borderColor = 'var(--border-color)';
-            });
-            box.addEventListener('drop', (e) => {
-                e.preventDefault();
-                box.style.borderColor = 'var(--border-color)';
-                if (e.dataTransfer.files.length > 0) {
-                    input.files = e.dataTransfer.files;
-                    console.log('Files dropped:', input.files);
-                }
-            });
-        });
-
-    });
-</script>
 </body>
 </html>
