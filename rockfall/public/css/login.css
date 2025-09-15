@@ -1,0 +1,141 @@
+ body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #10142c;
+      color: #fff;
+    }
+    .container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      flex-direction: column;
+      padding: 20px;
+    }
+    .logo {
+      text-align: center;
+      margin-bottom: 25px;
+      position: relative;
+    }
+    .logo svg {
+      height: 55px;
+      width: 55px;
+      stroke: #f24d00;
+      fill: none;
+      stroke-width: 3px;
+      position: relative;
+      z-index: 1;
+    }
+    .logo h1 {
+      font-size: 26px;
+      margin: 8px 0 0;
+      font-weight: 700;
+      position: relative;
+      z-index: 1;
+    }
+    .logo p {
+      margin: 0;
+      font-size: 14px;
+      color: #aaa;
+      position: relative;
+      z-index: 1;
+    }
+    .card {
+      background: #1c2439;
+      padding: 30px;
+      border-radius: 14px;
+      width: 360px;
+      text-align: center;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.45);
+    }
+    .secure {
+      color: #ff7b00;
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .secure svg {
+      width: 20px;
+      height: 20px;
+      stroke: #f24d00;
+      fill: none;
+      stroke-width: 2px;
+    }
+    .form-group {
+      text-align: left;
+      margin-bottom: 16px;
+    }
+    label {
+      font-size: 14px;
+      margin-bottom: 6px;
+      display: block;
+    }
+    select, input {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 8px;
+      border: none;
+      background: #2a324d;
+      color: #fff;
+      font-size: 14px;
+      appearance: none;
+      box-sizing: border-box;
+    }
+    
+    select {
+      background-image: url("data:image/svg+xml;utf8,<svg fill='white' height='16' viewBox='0 0 24 24' width='16' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      background-size: 16px;
+    }
+    option {
+      background: #1c2439;
+      color: #fff;
+    }
+    input[type="password"] {
+      letter-spacing: 2px;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      box-sizing: border-box;
+      transition: background 0.2s ease;
+    }
+    .btn-login {
+      background: #f24d00;
+      color: #fff;
+      font-size: 15px;
+      margin: 12px 0 8px;
+    }
+    .btn-login:hover {
+      background: #d63d00;
+    }
+    .btn-register {
+      background: #2a324d;
+      color: #fff;
+      font-size: 14px;
+      margin-bottom: 12px;
+    }
+    .btn-register:hover {
+      background: #3a4360;
+    }
+    .footer {
+      margin-top: 22px;
+      font-size: 12px;
+      color: #aaa;
+      text-align: center;
+      line-height: 1.6;
+    }
+    .footer a {
+      color: #aaa;
+      text-decoration: none;
+      margin: 0 6px;
+    }

@@ -1,0 +1,35 @@
+<footer class="main-footer">
+  <div class="footer-left">
+    <a href="#">About</a>
+    <a href="#">Contact</a>
+    <a href="#">Privacy & Security</a>
+    <a href="#">Open Source</a>
+  </div>
+</footer>
+</div>
+</div>
+
+<script>
+  (function() {
+    const appGrid = document.getElementById('appGrid');
+    const toggleBtn = document.getElementById('toggleBtn');
+
+    toggleBtn.addEventListener('click', () => {
+      appGrid.classList.toggle('sidebar-collapsed');
+    });
+
+   
+    function handleResize() {
+      if (window.innerWidth <= 820) {
+        toggleBtn.addEventListener('click', () => {
+          appGrid.classList.toggle('show-sidebar');
+        });
+      }
+    }
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+  })();
+</script>
+</body>
+</html>
