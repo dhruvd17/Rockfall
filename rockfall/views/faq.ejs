@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FAQ</title>
+  <link rel="stylesheet" href="/css/faq.css" />
+</head>
+<body>
+  <div class="faq-container">
+    <input type="text" id="faqSearch" class="faq-search" placeholder="Search frequently asked questions..." />
+
+    
+    <div class="faq-section" data-section>
+      <h2>Getting Started</h2>
+      <div class="faq-item">
+        <button class="faq-question">
+          How do I upload my first DEM file?
+          <span class="arrow">▼</span>
+        </button>
+        <div class="faq-answer">
+          Navigate to the Data Upload section, select the DEM Files tab, and either drag and drop your .tif file or use the Browse Files button. Ensure your file includes coordinate system information for best results.
+</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-question">
+          What file formats are supported?
+          <span class="arrow">▼</span>
+        </button>
+        <div class="faq-answer">GeoTIFF (.tif), NetCDF (.nc), and CSV (.csv) formats are supported.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-question">
+          How do I set up my first risk alert?
+          <span class="arrow">▼</span>
+        </button>
+        <div class="faq-answer">Go to the Risk Alerts tab, click "New Alert," set your thresholds, and save.</div>
+      </div>
+    </div>
+
+    
+    <div class="faq-section" data-section>
+      <h2>Risk Assessment</h2>
+      <div class="faq-item">
+        <button class="faq-question">
+          How accurate are the risk predictions?
+          <span class="arrow">▼</span>
+        </button>
+        <div class="faq-answer">Predictions are based on historical data and models with an accuracy of 85–90% depending on available input data.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-question">
+          What factors influence slope stability?
+          <span class="arrow">▼</span>
+        </button>
+        <div class="faq-answer">Factors include rainfall, soil composition, vegetation, and seismic activity.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-question">
+          How often are risk levels updated?
+          <span class="arrow">▼</span>
+        </button>
+        <div class="faq-answer">Risk levels are updated every 6 hours based on sensor data and weather reports.</div>
+      </div>
+    </div>
+
+    
+    <div class="faq-section" data-section>
+      <h2>Sensor Management</h2>
+      <div class="faq-item">
+        <button class="faq-question">
+          How do I connect a new sensor to the system?
+          <span class="arrow">▼</span>
+        </button>
+        <div class="faq-answer">Open the Sensors tab, click "Add Sensor," enter its ID, and follow setup instructions.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-question">
+          What should I do if a sensor goes offline?
+          <span class="arrow">▼</span>
+        </button>
+        <div class="faq-answer">Check the sensor’s power supply, network connectivity, and replace batteries if necessary.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-question">
+          How often should sensors be calibrated?
+          <span class="arrow">▼</span>
+        </button>
+        <div class="faq-answer">Sensors should be calibrated every 3 months or after extreme weather events.</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/faq.js"></script>
+</body>
+</html>

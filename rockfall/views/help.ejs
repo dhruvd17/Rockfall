@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Dashboard — Rockfall</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+ <link rel="stylesheet" href="/css/help.css">
+</head>
+
+<body>
+  <div class="app-grid" id="appGrid">
+
+    <aside class="sidebar" id="sidebar">
+      <div class="inner">
+        <div class="sidebar-header">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+            stroke-linejoin="round">
+            <path d="M8 3l4 8 5-5 5 15H2L8 3z"></path>
+          </svg>
+          <h2>Rockfall:<br>PitMine</h2>
+          <p>Slope Stability Monitor</p>
+        </div>
+        <nav class="sidebar-menu">
+         <a href="/dashboard">🏠 Dashboard</a>
+          <a href="/riskmap">🗺️ Risk Map</a>
+          <a href="/alerts">⚠️ Alerts</a>
+          <a href="/dataupload">⬆️ Data Upload</a>
+          <a href="/forecast">📈 Forecast</a>
+          <a href="/settings">⚙️ Settings</a>
+          <a href="/help"  class="active">❓ Help</a>
+        </nav>
+      </div>
+      <div class="user-card">
+        <div class="avatar">👤</div>
+        <h4>Neer Malik</h4>
+        <p>Admin</p>
+        <button type="button"
+          style="width:100%; padding:8px; border-radius:8px; border:1px solid #d1d5db; background:#fff; color:#374151;">⇦
+          Sign Out</button>
+      </div>
+    </aside>
+
+    <div class="right" id="rightCol">
+
+      <header class="main-header">
+        <div class="header-left">
+          <button class="toggle-btn" id="toggleBtn" aria-expanded="true" title="Toggle sidebar">☰</button>
+          <button class="status-btn online"><span class="status-light"></span><i class="fa-solid fa-shield-halved"></i>
+            System Online</button>
+        </div>
+        <div class="header-right">
+          <button class="icon-btn"><i class="fa-regular fa-bell"></i> Notifications</button>
+          <div class="user-info"><i class="fa-regular fa-user"></i> <span class="user-name">Neer Malik</span> <span
+              class="user-role">Admin</span></div>
+          <button class="logout-btn"><i class="fa-solid fa-power-off"></i></button>
+        </div>
+      </header>
+
+      <div class="sub-header">
+        <div class="sub-left">
+          <h2>Help & Documentation</h2>
+          <p>Get help, tutorials, and support for MineGuard</p>
+        </div>
+	<div class="sub-right">
+	<Button class="greywhite">Download PDF Guide</Button>
+	<Button class="orangewhite">Contact Support</Button>
+	</div>
+      </div>
+
+      
+      <div class="help-cards">
+        <div class="card">
+          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+            class="lucide lucide-book text-blue-500 mx-auto mb-3">
+            <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20"></path>
+          </svg>
+          <h3>User Manual</h3>
+          <p>Complete documentation</p>
+        </div>
+
+        <div class="card">
+          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+            class="lucide lucide-video text-green-500 mx-auto mb-3">
+            <path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.87a.5.5 0 0 0-.752-.432L16 10.5"></path>
+            <rect x="2" y="6" width="14" height="12" rx="2"></rect>
+          </svg>
+          <h3>Video Tutorials</h3>
+          <p>Step-by-step guides</p>
+        </div>
+
+        <div class="card">
+          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+            class="lucide lucide-file-text text-orange-500 mx-auto mb-3">
+            <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path>
+            <path d="M14 2v4a2 2 0 0 0 2 2h4"></path>
+            <path d="M10 9H8"></path>
+            <path d="M16 13H8"></path>
+            <path d="M16 17H8"></path>
+          </svg>
+          <h3>API Docs</h3>
+          <p>Developer resources</p>
+        </div>
+
+        <div class="card">
+          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+            class="lucide lucide-message-circle text-purple-500 mx-auto mb-3">
+            <path
+              d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719Z">
+            </path>
+          </svg>
+          <h3>Live Chat</h3>
+          <p>Get instant help</p>
+        </div>
+      </div>
+
+      <div class="top-tabs">
+        <a href="#" class="active" data-src="/faq">FAQ</a>
+        <a href="#" data-src="/tutorials">Tutorials</a>
+        <a href="#" data-src="/support">Support</a>
+        <a href="#" data-src="/resources">Resources</a>
+      </div>
+
+      <main class="main">
+        <iframe src="/faq" id="contentFrame" class="content-frame"></iframe>
+      </main>
+
+      <footer class="main-footer">
+<a href="#">About</a>     
+<a href="#">Contact</a>   
+<a href="#">Privacy Policy</a>
+        <a href="#">Open Source</a>
+        
+      </footer>
+    </div>
+  </div>
+
+ <script src="/js/help.js"></script>
+</body>
+
+</html>

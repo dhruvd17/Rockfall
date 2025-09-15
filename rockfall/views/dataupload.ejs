@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Dashboard — Rockfall</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <link rel="stylesheet" href="/css/dataupload.css" />  
+</head>
+
+<body>
+  <div class="app-grid" id="appGrid">
+    <aside class="sidebar" id="sidebar">
+      <div class="inner">
+        <div class="sidebar-header">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 3l4 8 5-5 5 15H2L8 3z"></path></svg>
+          <h2>Rockfall:<br>PitMine</h2>
+          <p>Slope Stability Monitor</p>
+        </div>
+        <nav class="sidebar-menu">
+         <a href="/dashboard">🏠 Dashboard</a>
+          <a href="/risk">🗺️ Risk Map</a>
+          <a href="/alerts">⚠️ Alerts</a>
+          <a href="/dataupload" class="active">⬆️ Data Upload</a>
+          <a href="/forecast">📈 Forecast</a>
+          <a href="/settings">⚙️ Settings</a>
+          <a href="/help">❓ Help</a>
+        </nav>
+      </div>
+      <div class="user-card">
+        <div class="avatar">👤</div>
+        <h4>Neer Malik</h4>
+        <p>Admin</p>
+        <button type="button" style="width:100%; padding:8px; border-radius:8px; border:1px solid #d1d5db; background:#fff; color:#374151;">⇦ Sign Out</button>
+      </div>
+    </aside>
+
+    <div class="right" id="rightCol">
+      <header class="main-header">
+        <div class="header-left">
+          <button class="toggle-btn" id="toggleBtn" title="Toggle sidebar">☰</button>
+          <button class="status-btn"><span class="status-light"></span> System Online</button>
+        </div>
+        <div class="header-right">
+          <button class="icon-btn"><i class="fa-regular fa-bell"></i> Notifications</button>
+          <div class="user-info"><i class="fa-regular fa-user"></i> <span class="user-name">Neer Malik</span> <span class="user-role">Admin</span></div>
+          <button class="logout-btn"><i class="fa-solid fa-power-off"></i></button>
+        </div>
+      </header>
+
+      <main class="main">
+        <div id="dashboard-page" class="main-content-page"><h1>Dashboard</h1></div>
+        <div id="riskmap-page" class="main-content-page"><h1>Risk Map</h1></div>
+        <div id="alerts-page" class="main-content-page"><h1>Alerts</h1></div>
+        <div id="forecast-page" class="main-content-page"><h1>Forecast</h1></div>
+        <div id="settings-page" class="main-content-page"><h1>Settings</h1></div>
+        
+        <div id="data-management-page" class="main-content-page active">
+            <header class="dm-page-header">
+                <div class="dm-page-header-left">
+                    <div>
+                        <h1>Data Management 📂</h1>
+                        <p>Upload data files and manage sensor connections</p>
+                    </div>
+                </div>
+                <div class="dm-page-header-right">
+                    <button class="action-btn"><i class="fa-solid fa-sync"></i> Sync All Sensors</button>
+                    <button id="saveUploadBtn" class="action-btn" style="display: none;">
+                        <i class="fa-solid fa-save"></i> Save Upload
+                    </button>
+                </div>
+            </header>
+
+            <nav class="dm-tabs">
+                <button class="dm-tab-btn active" data-tab="file-upload">File Upload</button>
+                <button class="dm-tab-btn" data-tab="sensor-integration">Sensor Integration</button>
+                <button class="dm-tab-btn" data-tab="upload-history">Upload History</button>
+            </nav>
+
+            <main>
+                <div id="file-upload" class="dm-tab-content">
+                    <div class="upload-grid">
+                        <div class="drop-zone">
+                            <label>
+                                <div class="drop-zone-icon"><i class="fa-solid fa-database"></i></div>
+                                <h3>DEM Files</h3>
+                                <p>Digital Elevation Models (.tif, .dem)</p>
+                                <span class="browse-btn">
+                                    <i class="fa-solid fa-upload"></i> Browse Files
+                                    <input type="file" class="file-input" hidden accept=".tif,.dem,.asc">
+                                </span>
+                            </label>
+                        </div>
+                        <div class="drop-zone">
+                            <label>
+                                <div class="drop-zone-icon"><i class="fa-solid fa-image"></i></div>
+                                <h3>Drone Imagery</h3>
+                                <p>Aerial photos (.jpg, .tiff, .png)</p>
+                                <span class="browse-btn">
+                                    <i class="fa-solid fa-upload"></i> Browse Files
+                                    <input type="file" class="file-input" hidden multiple accept="image/*">
+                                </span>
+                            </label>
+                        </div>
+                        <div class="drop-zone">
+                            <label>
+                                <div class="drop-zone-icon"><i class="fa-solid fa-wave-square"></i></div>
+                                <h3>Sensor Data</h3>
+                                <p>CSV data files (.csv, .txt)</p>
+                                <span class="browse-btn">
+                                    <i class="fa-solid fa-upload"></i> Browse Files
+                                    <input type="file" class="file-input" hidden accept=".csv,.txt">
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="sensor-integration" class="dm-tab-content">
+                  <div class="sensor-summary-grid">
+                    <div class="summary-card">
+                      <div class="value online">2</div>
+                      <div class="label">Online</div>
+                    </div>
+                    <div class="summary-card">
+                      <div class="value warning">1</div>
+                      <div class="label">Warning</div>
+                    </div>
+                    <div class="summary-card">
+                      <div class="value offline">1</div>
+                      <div class="label">Offline</div>
+                    </div>
+                    <div class="summary-card">
+                      <div class="value">75%</div>
+                      <div class="label">Uptime</div>
+                    </div>
+                  </div>
+                  
+                  <div class="content-card">
+                    <h2>Connected Sensors</h2>
+                    <p>Monitor and manage sensor connections</p>
+                    <div class="sensor-list">
+                      <div class="sensor-item">
+                        <div class="sensor-info">
+                          <div class="sensor-icon">✅</div>
+                          <div class="sensor-details">
+                            <h4>Piezometer A-1</h4>
+                            <p>Groundwater sensor</p>
+                          </div>
+                        </div>
+                        <div class="sensor-status">
+                          <div class="status-label online">Online</div>
+                          <div class="last-sync">Last sync: 2 min ago</div>
+                        </div>
+                        <button class="configure-btn">Configure</button>
+                      </div>
+                      <div class="sensor-item">
+                        <div class="sensor-info">
+                          <div class="sensor-icon">✅</div>
+                          <div class="sensor-details">
+                            <h4>Inclinometer B-2</h4>
+                            <p>Movement sensor</p>
+                          </div>
+                        </div>
+                        <div class="sensor-status">
+                          <div class="status-label online">Online</div>
+                          <div class="last-sync">Last sync: 1 min ago</div>
+                        </div>
+                        <button class="configure-btn">Configure</button>
+                      </div>
+                      <div class="sensor-item">
+                        <div class="sensor-info">
+                          <div class="sensor-icon">⚠</div>
+                          <div class="sensor-details">
+                            <h4>Weather Station C-1</h4>
+                            <p>Environmental sensor</p>
+                          </div>
+                        </div>
+                        <div class="sensor-status">
+                          <div class="status-label warning">Warning</div>
+                          <div class="last-sync">Last sync: 15 min ago</div>
+                        </div>
+                        <button class="configure-btn">Configure</button>
+                      </div>
+                      <div class="sensor-item">
+                        <div class="sensor-info">
+                          <div class="sensor-icon">❌</div>
+                          <div class="sensor-details">
+                            <h4>Strain Gauge D-3</h4>
+                            <p>Structural sensor</p>
+                          </div>
+                        </div>
+                        <div class="sensor-status">
+                          <div class="status-label offline">Offline</div>
+                          <div class="last-sync">Last sync: 2 hours ago</div>
+                        </div>
+                        <button class="configure-btn">Configure</button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="content-card">
+                    <h2>Add New Sensor</h2>
+                    <p>Connect additional monitoring equipment</p>
+                    <form>
+                      <div class="form-grid">
+                        <div class="form-group">
+                          <label for="sensor-name">Sensor Name</label>
+                          <input type="text" id="sensor-name" placeholder="e.g., Inclinometer A-3">
+                        </div>
+                        <div class="form-group">
+                          <label for="sensor-type">Sensor Type</label>
+                          <input type="text" id="sensor-type" placeholder="e.g., Movement, Groundwater">
+                        </div>
+                        <div class="form-group full-width">
+                          <label for="api-endpoint">API Endpoint</label>
+                          <input type="text" id="api-endpoint" placeholder="https://sensor-api.example.com/data">
+                        </div>
+                         <div class="form-group full-width">
+                          <label for="api-key">API Key</label>
+                          <input type="password" id="api-key" placeholder="Enter API key">
+                        </div>
+                      </div>
+                      <button type="submit" class="action-btn" style="margin-top: 1.5rem;">🔌 Connect Sensor</button>
+                    </form>
+                  </div>
+                </div>
+
+                <div id="upload-history" class="dm-tab-content active">
+                  <div class="history-card">
+                    <h2>Upload History</h2>
+                    <p>Recent file uploads and processing status</p>
+                    <div class="history-list">
+                      <div class="history-item">
+                        <div class="history-item-left">
+                          <div class="file-icon">🛰</div>
+                          <div class="file-details">
+                            <h4>dem_sector_a_20240108.tif</h4>
+                            <p>DEM • 45.2 MB</p>
+                          </div>
+                        </div>
+                        <div class="history-item-right">
+                          <div class="file-status">
+                            <div class="timestamp">2024-01-08 14:30</div>
+                            <div class="status-badge completed">✅ Completed</div>
+                          </div>
+                          <div class="history-actions">
+                            <button title="View">👁</button>
+                            <button title="Download">📥</button>
+                            <button title="Delete">🗑</button>
+                          </div>
+                        </div>
+                      </div>
+                       <div class="history-item">
+                        <div class="history-item-left">
+                          <div class="file-icon">🖼</div>
+                          <div class="file-details">
+                            <h4>drone_imagery_sector_c.jpg</h4>
+                            <p>Drone Imagery • 12.8 MB</p>
+                          </div>
+                        </div>
+                        <div class="history-item-right">
+                          <div class="file-status">
+                            <div class="timestamp">2024-01-08 13:15</div>
+                            <div class="status-badge completed">✅ Completed</div>
+                          </div>
+                          <div class="history-actions">
+                            <button title="View">👁</button>
+                            <button title="Download">📥</button>
+                            <button title="Delete">🗑</button>
+                          </div>
+                        </div>
+                      </div>
+                       <div class="history-item">
+                        <div class="history-item-left">
+                          <div class="file-icon">📊</div>
+                          <div class="file-details">
+                            <h4>sensor_data_jan08.csv</h4>
+                            <p>Sensor Data • 2.1 MB</p>
+                          </div>
+                        </div>
+                        <div class="history-item-right">
+                          <div class="file-status">
+                            <div class="timestamp">2024-01-08 12:45</div>
+                            <div class="status-badge">
+                              <div class="progress-bar-container"><div class="progress-bar"></div></div>
+                              75% Processing
+                            </div>
+                          </div>
+                          <div class="history-actions">
+                            <button title="View">👁</button>
+                            <button title="Download">📥</button>
+                            <button title="Delete">🗑</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+            </main>
+        </div>
+      </main>
+
+      <footer class="main-footer">
+        <div class="footer-left">
+            <a href="#">About</a>
+            <a href="#">Contact</a>
+            <a href="#">Privacy & Security</a>
+            <a href="#">Open Source</a>
+        </div>
+      </footer>
+    </div>
+  </div>
+  <script src="/js/dataupload.js"></script>
+</body>
+</html>
