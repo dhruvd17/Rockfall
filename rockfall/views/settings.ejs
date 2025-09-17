@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Dashboard — Rockfall</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <link rel="stylesheet" href="/css/settings.css">
+</head>
+
+<body>
+  <div class="app-grid" id="appGrid">
+    <aside class="sidebar" id="sidebar">
+      <div class="inner">
+        <div class="sidebar-header">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 3l4 8 5-5 5 15H2L8 3z"></path>
+          </svg>
+          <h2>Rockfall:<br>PitMine</h2>
+          <p>Slope Stability Monitor</p>
+        </div>
+        <nav class="sidebar-menu">
+         
+          <a href="/dashboard">🏠 Dashboard</a>
+          <a href="/riskmap">🗺️ Risk Map</a>
+          <a href="/alerts">⚠️ Alerts</a>
+          <a href="/dataupload">⬆️ Data Upload</a>
+          <a href="/forecast">📈 Forecast</a>
+          <a href="/settings" class="active">⚙️ Settings</a>
+          <a href="/help">❓ Help</a>
+        </nav>
+      </div>
+      <div class="user-card">
+        <div class="avatar">👤</div>
+        <h4><%= user.username %></h4>
+        <p><%= user.role %></p>
+<a href="/logout"><button type="button" style="width:100%; padding:8px; border-radius:8px; border:1px solid #d1d5db; background:#fff; color:#374151;">⇦ Sign Out</button>
+</a>      
+</div>
+    </aside>
+
+    <div class="right" id="rightCol">
+      <header class="main-header">
+        <div class="header-left">
+          <button class="toggle-btn" id="toggleBtn" aria-expanded="true" title="Toggle sidebar">☰</button>
+          <button class="status-btn online"><span class="status-light"></span><i class="fa-solid fa-shield-halved"></i> System Online</button>
+        </div>
+        <div class="header-right">
+          <button class="icon-btn"><i class="fa-regular fa-bell"></i> Notifications</button>
+          <div class="user-info"><i class="fa-regular fa-user"></i> <span class="user-name"><%= user.username %></span> <span class="user-role"><%= user.role %></span></div>
+         
+          <a href="/logout"> <button class="logout-btn"><i class="fa-solid fa-power-off"></i></button></a>
+        </div>
+      </header>
+
+      <div class="sub-header">
+        <div class="sub-left">
+          <h2>System Settings</h2>
+          <p>Configure system preferences and user management</p>
+        </div>
+        <div class="sub-right">
+          <button class="reset-btn" disabled>Reset to Defaults</button>
+          <button class="save-btn">Save Changes</button>
+        </div>
+      </div>
+
+      
+      <nav class="top-tabs">
+        <a href="#" class="active" data-src="/alertpref">Alert Preferences</a>
+        <a href="#" data-src="/userman">User Management</a>
+        <a href="#" data-src="/datasour">Data Sources</a>
+        <a href="#" data-src="/systems">System</a>
+      </nav>
+
+      <main class="main">
+        <iframe id="contentFrame" class="content-frame" src="/alertpref"></iframe>
+      </main>
+
+      <footer class="main-footer">
+        <div class="footer-left">
+          <a href="#">About</a>
+          <a href="#">Contact</a>
+          <a href="#">Privacy & Security</a>
+          <a href="#">Open Source</a>
+        </div>
+      </footer>
+    </div>
+  </div>
+
+  <script src="/js/settings.js"></script>
+</body>
+
+</html>

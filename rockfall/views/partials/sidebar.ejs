@@ -1,0 +1,28 @@
+<aside class="sidebar" id="sidebar">
+  <div class="inner">
+    <div class="sidebar-header">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+        stroke-linejoin="round">
+        <path d="M8 3l4 8 5-5 5 15H2L8 3z"></path>
+      </svg>
+      <h2>Rockfall:<br>PitMine</h2>
+      <p>Slope Stability Monitor</p>
+    </div>
+    <nav class="sidebar-menu">
+      <a href="/dashboard" class="<%= activePage === 'dashboard' ? 'active' : '' %>" data-src="/dashboard">🏠 Dashboard</a>
+      <a href="/riskmap" data-src="/riskmap">🗺️ Risk Map</a>
+      <a href="/alerts" class="<%= activePage === 'alert' ? 'active' : '' %>" data-src="/alerts">⚠️ Alerts</a>
+      <a href="/dataupload" data-src="/upload">⬆️ Data Upload</a>
+      <a href="/forecast" data-src="/forecast">📈 Forecast</a>
+      <a href="/settings" data-src="/settings">⚙️ Settings</a>
+      <a href="/help" data-src="/help">❓ Help</a>
+    </nav>
+  </div>
+  <div class="user-card">
+    <div class="avatar">👤</div>
+    <h4><%= user.username %></h4>
+    <p><%= user.role %></p>
+    <a href="/logout"><button type="button" style="width:100%; padding:8px; border-radius:8px; border:1px solid #d1d5db; background:#fff; color:#374151;">⇦ Sign Out</button>
+</a>
+  </div>
+</aside>

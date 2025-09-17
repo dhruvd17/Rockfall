@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Data Source & API Integration</title>
+  <link rel="stylesheet" href="/css/datasour.css">
+</head>
+<body>
+  <div class="container">
+ 
+    <div class="card">
+      <div class="header">
+        <span>🗄️</span>
+        <h2>Data Source Configuration</h2>
+      </div>
+      <p class="subtext">Configure external data sources and APIs</p>
+
+      <div class="grid">
+        <input type="text" placeholder="Enter API key">
+        <select>
+          <option>30 seconds</option>
+          <option>1 minute</option>
+          <option selected>5 minutes</option>
+          <option>10 minutes</option>
+          <option>15 minutes</option>
+          <option>30 minutes</option>
+        </select>
+        <input type="text" placeholder="postgresql://user:pass@host:port/db">
+        <select>
+          <option value="hourly">Hourly</option>
+          <option value="daily">Daily</option>
+          <option value="weekly">Weekly</option>
+        </select>
+      </div>
+
+      <div class="critical-text">
+        Data Retention Period: <span id="retentionValue">365</span> days
+      </div>
+      <p style="margin-top:-4px; font-size:12px; color:#94A3B8;">How long to keep historical data</p>
+
+      <div class="slider-container">
+        <input type="range" id="retentionSlider" min="30" max="365" value="365">
+      </div>
+    </div>
+
+    
+    <div class="card">
+      <div class="header">
+        <span>🔗</span>
+        <h2>API Integration</h2>
+      </div>
+      <p class="subtext">Manage API keys and external integrations</p>
+
+      <div class="api-item">
+        <div class="api-info">
+          <span>Weather Service API</span>
+          <small>Last sync: 2 min ago</small>
+        </div>
+        <div>
+          <span class="status connected">Connected</span>
+          <button class="btn">Configure</button>
+        </div>
+      </div>
+
+      <div class="api-item">
+        <div class="api-info">
+          <span>Geological Survey API</span>
+          <small>Last sync: 1 hour ago</small>
+        </div>
+        <div>
+          <span class="status connected">Connected</span>
+          <button class="btn">Configure</button>
+        </div>
+      </div>
+
+      <div class="api-item">
+        <div class="api-info">
+          <span>Sensor Network API</span>
+          <small>Last sync: Failed</small>
+        </div>
+        <div>
+          <span class="status error">Error</span>
+          <button class="btn">Configure</button>
+        </div>
+      </div>
+
+      <div class="api-item">
+        <div class="api-info">
+          <span>Satellite Imagery API</span>
+          <small>Last sync: Never</small>
+        </div>
+        <div>
+          <span class="status disconnected">Disconnected</span>
+          <button class="btn">Configure</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/datasour.js"></script>
+</body>
+</html>
